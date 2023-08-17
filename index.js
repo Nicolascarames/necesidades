@@ -30,4 +30,4 @@ app.use((error, req, res, next) => {
   });
 });
 
-app.listen(4000, () => console.log('Servidor escuchando en puerto 4000'));
+app.listen(3001, () => console.log('Servidor escuchando en puerto 3001'));
