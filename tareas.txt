@@ -1,0 +1,121 @@
+/list get lista servicios requeridos
+
+/login post por body recibe email y password
+     crea token 
+
+/register post body recibe nombre(obligatorio) email(obligatorio) biografia avatar
+
+/addservice post body recibe titulo(obligatorio) explicacion(obligatorio) fichero
+
+/replyservice recibe el id del servicio, post de comentario(obligatorio) y fichero
+
+/done post recibe idservicio idusuario, modifica cambio de no echo a echo el servicios
+
+middleware de token para autentificar las siguientes peticiones
+
+
+///////////////////////////////////////////////////////////////////////////////////
+
+
+Mis comentarios sobre el proyecto. Si necesitáis ayuda, crear ticket.
+
+Comentarios:
+
+- ✅ en gitHub veo que cada uno aportó algo
+
+- 🅰️ en readme.md: no se describen todos los endpoint; faltarían las instrucciones para levantar la API (.env, npm i, DB, ... )
+
+- 🅰️ int(10) deprecated. Usar int
+
+- ✅ "active" utilizar BOOLEN
+
+- 🅰️ No usar la variable de entorno USER, en algunos SO corresponde con el usuario de sistema (a mí me cogía siempre usuario "stefano" de sistema, la cambié por mysqluser)
+
+- ✅ require('dotenv').config() aconsejo siempre como primera línea. Evita problemas si antes hacemos import de módulos que necesitan las variables de entorno.
+
+- 🅰️ poner el puerto API como configurable (en .env)
+
+- 🅰️ ¿Token en la tabla user y en el esquema Joi? No se usa. Eliminar.
+
+- ✅ ✅ ✅ Problema grave: no siempre se hace la release de la connexión a BD (por ej en caso de error).
+connect.release() en el finally del try/catch porque se hay un error en el bloque de código try/catch, antes de connect.release, la conexión no se cierra. Esto provoca que si esto pasa 10 veces, acaba el pool de concesiones y la API acaba de funcionar (se pone a la espera de conexiones a DB). Revisar en todos los endpoint y middlewares.
+
+- ✅ ✅ ✅ en dataValidation no res.send(error), usar middleware de los errores (next(error)). Comprobar en toda la API.
+
+- 🅰️ falta revisar en toda la api ✅ en newUser no se usa Joi, eliminar: const Joi = require('joi'). Revisar en toda la API los import no utilizados.
+
+- 🅰️ mirar la gestion de ficheros ✅ ¿Avatar en newuser? ¿En new user avatar tendría que ser la img avatar del usuario? No se gestiona. Quitar avatar en creación usuario
+
+- 🅰️ya comente unos cuantos jaja ✅ eliminar o commentar console.log/console.error de debug
+
+- 🅰️ en sendMail poner configurable en .env "http://localhost:4000/confirm/". Será útil cuando haremos deploy y la API no estaré en localhost.
+
+- 🅰️ from de sendGrid ponerlo en .env. Si uso mi KEY, sendgrid no funciona con el remitente 'habgrupoe@gmail.com'
+
+- ✅ ✅ ✅ que bonito el cuerpo del correo de validación
+
+- 🅰️ mirar al hacer cambios para front 🅰️ En general, no solo en validación usuario, devolver siempre un objeto JSON con misma estructura { status: "", message:"" data: "" }. Y no a veces un string y a veces un objeto, ... Revisar todos los endPoint y middleware. ¿Porque esto? Así el desarrollador Front no tendrá que poner lógica por cada petición, la API devolverá siempre la misma estructura de JSON.
+
+- 🅰️ problema de seguridad: no utilizar id usuario para validar ( http://localhost:4000/confirm/${id}). Generar en fase de creación usuario un código unívoco (ej con uuid) que guardo en DB y cuando se valida pongo usuario validado y borro este código. (ej en https://gitlab.com/blueoceanstart/hack-a-boss/jsb18rt/tutorias/-/blob/main/08052023_repasoExpress/diarioDeViajes). ¡Esto porque, por como lo tenéis, podría fácilmente validar un usuario recién creado con email de otra persona simplemente haciendo "http://localhost:4000/confirm/123!!!"
+
+- 🅰️ por qué confirmMail en middlewares? Es un endpoint/controlador.
+
+- 🅰️ Se permite validar un usuario más veces. Si ya lo validé tendría que decir ya validado o ningún usuario por validar
+
+- ✅ no hace falta poner active en el token
+
+- ✅ ✅ ✅ devolvería, en el login, las infos id y e-mail/nombre usuario para poderlas visualiza/gestionar con React!
+
+- 🅰️ JOI para validar en todos los endpoint (futuro).
+
+- ✅ ✅ ✅ En catch de getUser no console.error, ir a middleware de los errores. Hacer un check en toda la API.
+
+- ✅ metido validacion de usuario para que solo retorne el user logueado ✅ getUser devuelve todos los datos!! Incluida pwd! No. Devolver solo los datos que el front pueda necesitar. Pasaría por isUser (token obligatorio)
+
+- ✅ "usuario no encontrado" es uno status code 404
+
+- 🅰️ Incoherencia: cuando creo usuario pwd: Joi.string().min(8).max(45).required() y en el cambio pwd me deja poner "1234"
+
+- ✅ ✅ ✅ en modifica usuario devolver los datos del usuario en el JSON
+
+- 🅰️ falta definir users (le cambiaría nombre por uploads) como static para poder acceder desde front a la foto con "http://localhost:4000/avatar/18253cb5-fb65-45a6-b39e-2eb6d6700993.jpg"
+
+- 🅰️ guardar en DB /avatar/18253cb5-fb65-45a6-b39e-2eb6d6700993.jpg, no solo "18253cb5-fb65-45a6-b39e-2eb6d6700993.jpg". Esto porqué gestionais subcarpetas en users (directorio static)
+
+- 🅰️ Hacéis un borrado lógico del usuario, bien. Pero tenéis que borrar la info sensible con el update a la base de datos (email, pwd, ...) porque si el usuario vuelve a registrarse le daría correo ya utilizado! Además cuidado con el borrado lógico, si hacéis un getUser del usuario borrado devuelve los datos. Si un usuario está borrado, hay que considerarlo como inexistente. Revisar en toda la API.
+
+- 🅰️ porque router.get('/mail/:mail', sendMail) como endpoint? ¿Eliminar, no?
+
+- ✅ eliminar const { dirname } = require('path') en upload
+
+- 🅰️ DRY: uploads, UploadComm y uploadAvatar son iguales (solo cambia /../users/services, /../users/avatar, /../users/coments)! Pasar path como parámetro y unificar. Pero no creo que haga falta gestionar sub carpetas en directorio estático si los ficheros tienen nombre unívocos. Guardamos en "users" todo (avatar, ficheros de las necesidades y ficheros comentarios)
+
+- ✅ metida response en .send ✅ cuando se crea un servicio devolver los datos del servicio creado
+
+- 🅰️ yo creo que se entiende mejor asi ;) ✅ AddService código duplicado: hacer solo una vez `INSERT INTO servicios.." con o sin fichero. No hace falta repetir:
+response.affectedRows > 0
+? res.send(`servicio creado corectamente!`)
+: res.send(
+'Problema con la conexión con la base de datos :( porfavor,vuelve a intentarlo'
+);
+solo poniéndolo fuera del if/else no duplicaríamos código.
+
+- ✅ modificar bd ✅ falta requisito: Marcar un servicio requerido como ya resuelto. Solo el propietario del servicio podría ponerlo como resuelto (gestionar BOOLEAN en DB) luego según los que tenéis pensado de vuestra plataforma: marcar servicio como resuelto en el front pero dejar a los usuarios la posibilidad de comentar y subir soluciones (más fácil) o permitir comentarios pero no subida de ficheros.
+
+- ✅ ahora isUser comprueba fechas de update user y creacion token ✅ si elimino usuario y tengo el token no caducado podría seguir utilizando la API. Hacer comprobación en middleware isUser. También si cambio pwd tendríamos que invalidar el token (ej en https://gitlab.com/blueoceanstart/hack-a-boss/jsb18rt/tutorias/-/blob/main/08052023_repasoExpress/diarioDeViajes)
+
+- 🅰️ pendiente gestionar con bd modificada 🅰️ en getService faltan datos usuarios de cada servicios para visualizarlos en el front, falta número comentarios, si está resuelto o no...
+
+- 🅰️ en getGervice implementaria en query params filtros y ordenación (mirar ejemplo en https://gitlab.com/blueoceanstart/hack-a-boss/jsb18rt/tutorias/-/blob/main/08052023_repasoExpress/diarioDeViajes/controllers/entries/listEntries.js )
+
+- 🅰️ cuando añado un commentario devolver todos los comentarios del servicio
+
+- 🅰️ en crea comentario id servicio en param no en el body
+
+- 🅰️ si añado comentario en un servicio que no existe tengo un error SQL
+
+- 🅰️ falta endpoint detalle servicio: devuelve datos del servicio y el listado de los comentarios (id, id user, email, fichero...)
+
+Y... ✅ ✅ ✅ test, test, test. Un saludo,
+
+Stefano
